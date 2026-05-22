@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector de Scuze Penibile AI</title>
+    <title>AI Excuse Detector</title>
     <style>
         :root {
             --bg: #1e1e2f;
@@ -55,14 +55,14 @@
         }
         button:hover { transform: scale(1.05); }
         button:disabled { background: #6272a4; cursor: not-allowed; transform: none; }
-        #rezultat { 
+        #result { 
             margin-top: 25px; 
             font-size: 20px; 
             padding: 15px;
             border-radius: 8px;
             display: none;
         }
-        .categoria-castigatoare { font-size: 28px; font-weight: bold; color: #50fa7b; margin: 10px 0;}
+        .winning-category { font-size: 28px; font-weight: bold; color: #50fa7b; margin: 10px 0;}
         .loading { color: #f1fa8c; font-style: italic; font-size: 18px; }
     </style>
 </head>
@@ -70,28 +70,27 @@
 
     <div class="container">
         <h1>Excuse-o-Tron 3000 🎓</h1>
-        <p>Aplicație de clasificare <strong>Zero-Shot</strong> rulată 100% în browser.</p>
-        <p style="font-size: 0.9em; color: #6272a4;">*Scrieți scuza în limba engleză pentru acuratețe maximă a modelului AI.</p>
+        <p>A <strong>Zero-Shot Classification</strong> app running 100% in your browser.</p>
         
         <textarea id="textInput" placeholder="Ex: I couldn't finish the project because my cat unplugged the Wi-Fi router..."></textarea>
         <br>
-        <button id="analyzeBtn" disabled>⚙️ Se încarcă AI-ul...</button>
+        <button id="analyzeBtn" disabled>⚙️ Loading AI Engine...</button>
         
-        <div id="rezultat"></div>
+        <div id="result"></div>
     </div>
 
-    <!-- Importăm biblioteca Transformers.js -->
+    <!-- Import Transformers.js -->
     <script type="module">
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.14.0';
 
         const button = document.getElementById('analyzeBtn');
-        const rezultatDiv = document.getElementById('rezultat');
+        const resultDiv = document.getElementById('result');
         const textInput = document.getElementById('textInput');
 
         let classifier;
 
-        // Categoriile noastre amuzante
-        const categorii = [
+        // The categories the AI will use to classify the excuse
+        const categories = [
             "technical issue or bad internet", 
             "blatant lie or made up story", 
             "pure laziness disguised as an excuse", 
@@ -99,47 +98,46 @@
             "valid and believable reason"
         ];
 
-        // Încărcăm modelul de AI în browser
+        // Load the AI model into the browser
         async function loadModel() {
             try {
-                // Folosim zero-shot classification
                 classifier = await pipeline('zero-shot-classification');
-                button.innerHTML = '🔍 Analizează Scuza';
+                button.innerHTML = '🔍 Analyze Excuse';
                 button.disabled = false;
             } catch (error) {
-                button.innerHTML = "Eroare la încărcare";
-                console.error("Eroare AI:", error);
+                button.innerHTML = "Error loading model";
+                console.error("AI Error:", error);
             }
         }
 
         button.addEventListener('click', async () => {
             const text = textInput.value;
-            if (!text) return alert("Scrie o scuză mai întâi!");
+            if (!text) return alert("Please type an excuse first!");
 
-            rezultatDiv.style.display = 'block';
-            rezultatDiv.innerHTML = '<div class="loading">Analizez gradul de penibil... ⏳</div>';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading">Analyzing the cringe level... ⏳</div>';
             button.disabled = true;
             
-            // Rulăm AI-ul pe textul dat în raport cu categoriile noastre
-            const result = await classifier(text, categorii);
+            // Run the AI model
+            const result = await classifier(text, categories);
             
-            // Extragem cea mai probabilă categorie
-            const categoriaTop = result.labels[0];
-            const probabilitate = Math.round(result.scores[0] * 100);
+            // Extract the top category
+            const topCategory = result.labels[0];
+            const probability = Math.round(result.scores[0] * 100);
 
-            // Traducem categoria în română pentru afișare
-            let categorieRo = "";
+            // Format for UI presentation
+            let displayCategory = "";
             let emoji = "";
-            if (categoriaTop.includes("technical issue")) { categorieRo = "Problemă Tehnică Clasică"; emoji = "🔌"; }
-            else if (categoriaTop.includes("blatant lie")) { categorieRo = "Minciună Gogonată"; emoji = "🤥"; }
-            else if (categoriaTop.includes("pure laziness")) { categorieRo = "Lene Absolută"; emoji = "🦥"; }
-            else if (categoriaTop.includes("pet related")) { categorieRo = "A dat vina pe animal"; emoji = "🐕"; }
-            else { categorieRo = "Scuză Validă (Credibil)"; emoji = "✅"; }
+            if (topCategory.includes("technical issue")) { displayCategory = "Classic Tech Issue"; emoji = "🔌"; }
+            else if (topCategory.includes("blatant lie")) { displayCategory = "Blatant Lie"; emoji = "🤥"; }
+            else if (topCategory.includes("pure laziness")) { displayCategory = "Pure Laziness"; emoji = "🦥"; }
+            else if (topCategory.includes("pet related")) { displayCategory = "Blamed the Pet"; emoji = "🐕"; }
+            else { displayCategory = "Valid Excuse (Credible)"; emoji = "✅"; }
 
-            rezultatDiv.innerHTML = `
-                <div>Verdictul AI-ului:</div>
-                <div class="categoria-castigatoare">${emoji} ${categorieRo}</div>
-                <div style="font-size: 16px; color: #8be9fd;">Siguranță model: ${probabilitate}%</div>
+            resultDiv.innerHTML = `
+                <div>AI Verdict:</div>
+                <div class="winning-category">${emoji} ${displayCategory}</div>
+                <div style="font-size: 16px; color: #8be9fd;">Model Confidence: ${probability}%</div>
             `;
             button.disabled = false;
         });
