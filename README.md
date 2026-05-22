@@ -15,7 +15,7 @@ Acest lucru demonstrează concepte cheie de AI modern:
 
 ## 🛠️ Cum se testează?
 Pagina este publică prin GitHub Pages.
-👉 **[ACCESEAZĂ APLICAȚIA LIVE AICI](aici-pui-linkul-de-la-github-pages)**
+👉 **[ACCESEAZĂ APLICAȚIA LIVE AICI](calinescuivanvlad22-ai.github.io.)**
 
 *Notă: Deoarece modelele mici optimizate pentru web (in-browser) sunt antrenate predominant pe limba engleză, aplicația necesită introducerea scuzelor în limba engleză pentru rezultate precise.*
 
