@@ -15,7 +15,7 @@ This demonstrates key modern AI concepts:
 
 ## 🛠️ How to test it?
 The application is publicly hosted via GitHub Pages.
-👉 **[ACCESS THE LIVE APP HERE](PUT_YOUR_GITHUB_PAGES_LINK_HERE)**
+👉 **[ACCESS THE LIVE APP HERE](calinescuivanvlad22-ai.github.io)**
 
 ## 📁 Repository Structure
 - `index.html` - The UI, CSS styling, and the AI logic (Vanilla JS + Transformers.js).
