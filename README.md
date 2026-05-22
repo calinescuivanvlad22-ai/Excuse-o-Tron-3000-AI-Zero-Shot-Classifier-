@@ -15,7 +15,7 @@ This demonstrates key modern AI concepts:
 
 ## 🛠️ How to test it?
 The application is publicly hosted via GitHub Pages.
-👉 **[ACCESS THE LIVE APP HERE](calinescuivanvlad22-ai.github.io)**
+👉 **[ACCESS THE LIVE APP HERE][calinescuivanvlad22-ai.github.io](https://calinescuivanvlad22-ai.github.io/Excuse-o-Tron-3000-AI-Zero-Shot-Classifier-/)**
 
 ## 📁 Repository Structure
 - `index.html` - The UI, CSS styling, and the AI logic (Vanilla JS + Transformers.js).
