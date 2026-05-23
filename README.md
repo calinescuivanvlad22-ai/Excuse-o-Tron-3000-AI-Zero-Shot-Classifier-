@@ -1,6 +1,6 @@
 # 🎓 Excuse-o-Tron 3000 (AI Zero-Shot Classifier)
 
-**Project developed by:** CALINESCU - IVAN VLAD & IONESCU TIBI , MDBI 
+**Project developed by:** CALINESCU - IVAN VLAD & IONESCU TIBI , MDBI.
 
 ## 🚀 About the Project
 Excuse-o-Tron 3000 is a fully interactive, multimodal web application that uses Artificial Intelligence to evaluate student or employee excuses and categorize them into specific buckets: *Blatant Lie, Pure Laziness, Tech Issue, or Valid Excuse*. 
