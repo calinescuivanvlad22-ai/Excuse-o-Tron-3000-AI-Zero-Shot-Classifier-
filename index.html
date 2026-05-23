@@ -19,7 +19,34 @@
             text-align: center; 
             padding: 40px 20px; 
             margin: 0;
+            transition: background-color 0.5s, box-shadow 0.5s;
         }
+        
+        /* The Polygraph Visual Effects */
+        .lie-detected {
+            background-color: #4a0000 !important;
+            animation: shake 0.5s;
+            animation-iteration-count: 2;
+        }
+        .truth-detected {
+            background-color: #002b12 !important;
+            box-shadow: inset 0 0 50px #50fa7b;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -27,6 +54,8 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
         }
         h1 { margin-top: 0; color: var(--primary); }
         textarea { 
@@ -46,13 +75,13 @@
         .button-group {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         
         button { 
-            padding: 15px 25px; 
-            font-size: 18px; 
+            padding: 12px 20px; 
+            font-size: 16px; 
             font-weight: bold;
             color: white; 
             border: none; 
@@ -62,11 +91,21 @@
         }
         button:hover { transform: scale(1.05); }
         
-        #analyzeBtn { background: linear-gradient(45deg, var(--primary), var(--secondary)); }
+        #analyzeBtn { background: linear-gradient(45deg, var(--primary), var(--secondary)); width: 100%; margin-top: 15px; padding: 15px;}
         #analyzeBtn:disabled { background: #6272a4; cursor: not-allowed; transform: none; }
         
-        #surpriseBtn { background: #44475a; border: 1px solid #6272a4; }
+        #surpriseBtn { background: #44475a; border: 1px solid #6272a4; flex: 1;}
         #surpriseBtn:hover { background: #6272a4; }
+
+        #micBtn { background: #ff5555; border: 1px solid #ff5555; flex: 1;}
+        #micBtn:hover { background: #ff0000; box-shadow: 0 0 15px #ff5555;}
+        .recording { animation: pulse 1.5s infinite; background: #ff0000 !important; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px #ff0000; }
+            100% { transform: scale(1); }
+        }
 
         #result { 
             margin-top: 25px; 
@@ -90,8 +129,9 @@
         
         <div class="button-group">
             <button id="surpriseBtn">🎲 Surprise Me</button>
-            <button id="analyzeBtn" disabled>⚙️ Loading AI Engine...</button>
+            <button id="micBtn">🎙️ Dictate Excuse</button>
         </div>
+        <button id="analyzeBtn" disabled>⚙️ Loading AI Engine...</button>
         
         <div id="result"></div>
     </div>
@@ -101,32 +141,69 @@
 
         const analyzeBtn = document.getElementById('analyzeBtn');
         const surpriseBtn = document.getElementById('surpriseBtn');
+        const micBtn = document.getElementById('micBtn');
         const resultDiv = document.getElementById('result');
         const textInput = document.getElementById('textInput');
 
         let classifier;
 
-        // --- NEW FEATURE 1: Random Excuse Generator ---
+        // --- FEATURE: Random Excuse Generator ---
         const funnyExcuses = [
             "I couldn't write the code because my keyboard is afraid of my fingers.",
             "My Wi-Fi router was abducted by aliens for a firmware update.",
             "I accidentally locked myself in the bathroom and had to negotiate with my cat to open the door.",
             "I tried to compile my code, but my laptop started crying.",
-            "A time traveler told me that if I finished this project today, the universe would explode.",
-            "My goldfish was feeling depressed so I had to stay and comfort him."
+            "A time traveler told me that if I finished this project today, the universe would explode."
         ];
 
         surpriseBtn.addEventListener('click', () => {
-            // Pick a random excuse and put it in the text box
             const randomIndex = Math.floor(Math.random() * funnyExcuses.length);
             textInput.value = funnyExcuses[randomIndex];
-            
-            // Optional: Stop any currently speaking voice so they don't overlap
             window.speechSynthesis.cancel(); 
             resultDiv.style.display = 'none';
+            document.body.className = ''; // Reset background
         });
 
-        // The categories the AI will use
+        // --- NEW FEATURE: Speech-to-Text (Microphone) ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                micBtn.innerHTML = '🔴 Listening...';
+                micBtn.classList.add('recording');
+                textInput.placeholder = 'Listening... Speak clearly into your mic.';
+                textInput.value = '';
+                document.body.className = ''; // Reset background
+                window.speechSynthesis.cancel();
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                textInput.value = transcript;
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error", event.error);
+                alert("Microphone error. Make sure you gave browser permissions!");
+            };
+
+            recognition.onend = function() {
+                micBtn.innerHTML = '🎙️ Dictate Excuse';
+                micBtn.classList.remove('recording');
+            };
+
+            micBtn.addEventListener('click', () => {
+                recognition.start();
+            });
+        } else {
+            // Hide mic button if browser doesn't support it (e.g. Firefox sometimes)
+            micBtn.style.display = 'none';
+        }
+
+        // --- Core AI Logic ---
         const categories = [
             "technical issue or bad internet", 
             "blatant lie or made up story", 
@@ -135,7 +212,6 @@
             "valid and believable reason"
         ];
 
-        // Load the AI model
         async function loadModel() {
             try {
                 classifier = await pipeline('zero-shot-classification');
@@ -147,45 +223,47 @@
             }
         }
 
-        // --- NEW FEATURE 3: Text-to-Speech Function ---
+        // --- FEATURE: Text-to-Speech ---
         function speakVerdict(category, probability) {
-            // Stop any previous speech
             window.speechSynthesis.cancel();
-
-            // Create the sentence the robot will say
-            const speechText = `AI Verdict: ${category}. Confidence level: ${probability} percent.`;
-            
+            const speechText = `Verdict: ${category}. Confidence: ${probability} percent.`;
             const utterance = new SpeechSynthesisUtterance(speechText);
             utterance.lang = 'en-US';
-            utterance.pitch = 0.7; // Lower pitch to sound more robotic/serious
-            utterance.rate = 0.9;  // Slightly slower speaking rate
-            
+            utterance.pitch = 0.6; 
+            utterance.rate = 0.9;  
             window.speechSynthesis.speak(utterance);
         }
 
         analyzeBtn.addEventListener('click', async () => {
             const text = textInput.value;
-            if (!text) return alert("Please type an excuse first!");
+            if (!text) return alert("Please type or speak an excuse first!");
 
+            // Reset UI
+            document.body.className = ''; 
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = '<div class="loading">Analyzing the cringe level... ⏳</div>';
             analyzeBtn.disabled = true;
             
-            // Run the AI model
+            // Run AI
             const result = await classifier(text, categories);
             
-            // Extract the top category
             const topCategory = result.labels[0];
             const probability = Math.round(result.scores[0] * 100);
 
-            // Format for UI presentation
             let displayCategory = "";
             let emoji = "";
+            
             if (topCategory.includes("technical issue")) { displayCategory = "Classic Tech Issue"; emoji = "🔌"; }
-            else if (topCategory.includes("blatant lie")) { displayCategory = "Blatant Lie"; emoji = "🤥"; }
+            else if (topCategory.includes("blatant lie")) { 
+                displayCategory = "Blatant Lie"; emoji = "🚨"; 
+                document.body.classList.add('lie-detected'); // Trigger Red Shake
+            }
             else if (topCategory.includes("pure laziness")) { displayCategory = "Pure Laziness"; emoji = "🦥"; }
             else if (topCategory.includes("pet related")) { displayCategory = "Blamed the Pet"; emoji = "🐕"; }
-            else { displayCategory = "Valid Excuse (Credible)"; emoji = "✅"; }
+            else { 
+                displayCategory = "Valid Excuse"; emoji = "✅"; 
+                document.body.classList.add('truth-detected'); // Trigger Green Glow
+            }
 
             resultDiv.innerHTML = `
                 <div>AI Verdict:</div>
@@ -193,9 +271,7 @@
                 <div style="font-size: 16px; color: #8be9fd;">Model Confidence: ${probability}%</div>
             `;
             
-            // Call the robot voice!
             speakVerdict(displayCategory, probability);
-            
             analyzeBtn.disabled = false;
         });
 
