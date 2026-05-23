@@ -42,11 +42,18 @@
             resize: none;
         }
         textarea:focus { outline: none; border-color: var(--secondary); }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
         button { 
-            padding: 15px 30px; 
+            padding: 15px 25px; 
             font-size: 18px; 
             font-weight: bold;
-            background: linear-gradient(45deg, var(--primary), var(--secondary)); 
             color: white; 
             border: none; 
             cursor: pointer; 
@@ -54,7 +61,13 @@
             transition: 0.3s;
         }
         button:hover { transform: scale(1.05); }
-        button:disabled { background: #6272a4; cursor: not-allowed; transform: none; }
+        
+        #analyzeBtn { background: linear-gradient(45deg, var(--primary), var(--secondary)); }
+        #analyzeBtn:disabled { background: #6272a4; cursor: not-allowed; transform: none; }
+        
+        #surpriseBtn { background: #44475a; border: 1px solid #6272a4; }
+        #surpriseBtn:hover { background: #6272a4; }
+
         #result { 
             margin-top: 25px; 
             font-size: 20px; 
@@ -74,22 +87,46 @@
         
         <textarea id="textInput" placeholder="Ex: I couldn't finish the project because my cat unplugged the Wi-Fi router..."></textarea>
         <br>
-        <button id="analyzeBtn" disabled>⚙️ Loading AI Engine...</button>
+        
+        <div class="button-group">
+            <button id="surpriseBtn">🎲 Surprise Me</button>
+            <button id="analyzeBtn" disabled>⚙️ Loading AI Engine...</button>
+        </div>
         
         <div id="result"></div>
     </div>
 
-    <!-- Import Transformers.js -->
     <script type="module">
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.14.0';
 
-        const button = document.getElementById('analyzeBtn');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const surpriseBtn = document.getElementById('surpriseBtn');
         const resultDiv = document.getElementById('result');
         const textInput = document.getElementById('textInput');
 
         let classifier;
 
-        // The categories the AI will use to classify the excuse
+        // --- NEW FEATURE 1: Random Excuse Generator ---
+        const funnyExcuses = [
+            "I couldn't write the code because my keyboard is afraid of my fingers.",
+            "My Wi-Fi router was abducted by aliens for a firmware update.",
+            "I accidentally locked myself in the bathroom and had to negotiate with my cat to open the door.",
+            "I tried to compile my code, but my laptop started crying.",
+            "A time traveler told me that if I finished this project today, the universe would explode.",
+            "My goldfish was feeling depressed so I had to stay and comfort him."
+        ];
+
+        surpriseBtn.addEventListener('click', () => {
+            // Pick a random excuse and put it in the text box
+            const randomIndex = Math.floor(Math.random() * funnyExcuses.length);
+            textInput.value = funnyExcuses[randomIndex];
+            
+            // Optional: Stop any currently speaking voice so they don't overlap
+            window.speechSynthesis.cancel(); 
+            resultDiv.style.display = 'none';
+        });
+
+        // The categories the AI will use
         const categories = [
             "technical issue or bad internet", 
             "blatant lie or made up story", 
@@ -98,25 +135,41 @@
             "valid and believable reason"
         ];
 
-        // Load the AI model into the browser
+        // Load the AI model
         async function loadModel() {
             try {
                 classifier = await pipeline('zero-shot-classification');
-                button.innerHTML = '🔍 Analyze Excuse';
-                button.disabled = false;
+                analyzeBtn.innerHTML = '🔍 Analyze Excuse';
+                analyzeBtn.disabled = false;
             } catch (error) {
-                button.innerHTML = "Error loading model";
+                analyzeBtn.innerHTML = "Error loading model";
                 console.error("AI Error:", error);
             }
         }
 
-        button.addEventListener('click', async () => {
+        // --- NEW FEATURE 3: Text-to-Speech Function ---
+        function speakVerdict(category, probability) {
+            // Stop any previous speech
+            window.speechSynthesis.cancel();
+
+            // Create the sentence the robot will say
+            const speechText = `AI Verdict: ${category}. Confidence level: ${probability} percent.`;
+            
+            const utterance = new SpeechSynthesisUtterance(speechText);
+            utterance.lang = 'en-US';
+            utterance.pitch = 0.7; // Lower pitch to sound more robotic/serious
+            utterance.rate = 0.9;  // Slightly slower speaking rate
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
             const text = textInput.value;
             if (!text) return alert("Please type an excuse first!");
 
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = '<div class="loading">Analyzing the cringe level... ⏳</div>';
-            button.disabled = true;
+            analyzeBtn.disabled = true;
             
             // Run the AI model
             const result = await classifier(text, categories);
@@ -139,7 +192,11 @@
                 <div class="winning-category">${emoji} ${displayCategory}</div>
                 <div style="font-size: 16px; color: #8be9fd;">Model Confidence: ${probability}%</div>
             `;
-            button.disabled = false;
+            
+            // Call the robot voice!
+            speakVerdict(displayCategory, probability);
+            
+            analyzeBtn.disabled = false;
         });
 
         loadModel();
