@@ -2,6 +2,9 @@
 
 **Project developed by:** CALINESCU - IVAN VLAD & IONESCU TIBI , MDBI.
 
+> **💡 Note for the Reader / Pro Tip:**
+> Be as honest as you can to score a higher confidence percentage and get the coveted "green glow" of truth! The AI analyzes semantic credibility, so be honest for your excuses to sound honest. :)
+
 ## 🚀 About the Project
 Excuse-o-Tron 3000 is a fully interactive, multimodal web application that uses Artificial Intelligence to evaluate student or employee excuses and categorize them into specific buckets: *Blatant Lie, Pure Laziness, Tech Issue, or Valid Excuse*. 
 
