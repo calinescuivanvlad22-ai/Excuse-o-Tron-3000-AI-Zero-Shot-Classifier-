@@ -22,7 +22,6 @@
             transition: background-color 0.5s, box-shadow 0.5s;
         }
         
-        /* The Polygraph Visual Effects */
         .lie-detected {
             background-color: #4a0000 !important;
             animation: shake 0.5s;
@@ -58,12 +57,28 @@
             z-index: 10;
         }
         h1 { margin-top: 0; color: var(--primary); }
+        
+        /* NEW: Dropdown Styling */
+        select {
+            width: 90%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            background: var(--bg);
+            color: white;
+            border: 2px solid var(--secondary);
+            cursor: pointer;
+            outline: none;
+        }
+        select:focus { border-color: var(--primary); }
+
         textarea { 
             width: 90%; 
             height: 100px; 
             font-size: 16px; 
             padding: 15px; 
-            margin: 20px 0; 
+            margin: 15px 0; 
             border-radius: 10px; 
             border: 2px solid #44475a; 
             background: var(--bg);
@@ -124,11 +139,19 @@
         <h1>Excuse-o-Tron 3000 🎓</h1>
         <p>A <strong>Zero-Shot Classification</strong> app running 100% in your browser.</p>
         
+        <select id="excuseCategory">
+            <option value="random">🎲 Any Situation (Random)</option>
+            <option value="work">🏢 Late to Work</option>
+            <option value="school">🎒 Missed Assignment/School</option>
+            <option value="meeting">📅 Skipped a Meeting</option>
+            <option value="social">🍻 Avoiding a Social Event</option>
+        </select>
+
         <textarea id="textInput" placeholder="Ex: I couldn't finish the project because my cat unplugged the Wi-Fi router..."></textarea>
         <br>
         
         <div class="button-group">
-            <button id="surpriseBtn">🎲 Surprise Me</button>
+            <button id="surpriseBtn">✨ Generate Excuse</button>
             <button id="micBtn">🎙️ Dictate Excuse</button>
         </div>
         <button id="analyzeBtn" disabled>⚙️ Loading AI Engine...</button>
@@ -144,27 +167,61 @@
         const micBtn = document.getElementById('micBtn');
         const resultDiv = document.getElementById('result');
         const textInput = document.getElementById('textInput');
+        const categoryDropdown = document.getElementById('excuseCategory'); // Dropdown Element
 
         let classifier;
 
-        // --- FEATURE: Random Excuse Generator ---
-        const funnyExcuses = [
-            "I couldn't write the code because my keyboard is afraid of my fingers.",
-            "My Wi-Fi router was abducted by aliens for a firmware update.",
-            "I accidentally locked myself in the bathroom and had to negotiate with my cat to open the door.",
-            "I tried to compile my code, but my laptop started crying.",
-            "A time traveler told me that if I finished this project today, the universe would explode."
-        ];
+        // --- UPGRADED FEATURE: Categorized Excuse Dictionary ---
+        const smartExcuses = {
+            work: [
+                "I'm running late because there was a rogue swan blocking the highway.",
+                "My alarm went off, but my cat turned it off to teach me a lesson.",
+                "I got stuck in an elevator with a guy explaining cryptocurrency to me.",
+                "My car wouldn't start because it’s updating its terms and conditions."
+            ],
+            school: [
+                "My dog didn't eat my homework, but he did judge it very harshly.",
+                "I accidentally compiled my essay into machine code and couldn't reverse it.",
+                "The Wi-Fi router was abducted by aliens for a firmware update.",
+                "I couldn't write the code because my keyboard is afraid of my fingers."
+            ],
+            meeting: [
+                "I can't make the meeting, I'm currently negotiating peace with my printer.",
+                "I have a sudden and fatal allergy to corporate synergy and action items.",
+                "I am trapped under a very heavy, sleeping dog and the law says I cannot move.",
+                "My webcam decided to only display me as a talking potato."
+            ],
+            social: [
+                "I'd love to come, but I have already put on my comfortable sweatpants.",
+                "I can't make it, I need to wash my hair... and my cat's hair.",
+                "My social battery is currently at 1% and I cannot find the charger.",
+                "A time traveler told me that if I attend this party, the universe will explode."
+            ]
+        };
 
+        // When "Generate Excuse" is clicked
         surpriseBtn.addEventListener('click', () => {
-            const randomIndex = Math.floor(Math.random() * funnyExcuses.length);
-            textInput.value = funnyExcuses[randomIndex];
+            let selectedCategory = categoryDropdown.value;
+
+            // If random, pick a random category key
+            if (selectedCategory === "random") {
+                const keys = Object.keys(smartExcuses);
+                selectedCategory = keys[Math.floor(Math.random() * keys.length)];
+            }
+
+            // Get the list of excuses for the chosen category and pick one
+            const excusesList = smartExcuses[selectedCategory];
+            const randomIndex = Math.floor(Math.random() * excusesList.length);
+            
+            textInput.value = excusesList[randomIndex];
+            
+            // Reset UI states
             window.speechSynthesis.cancel(); 
             resultDiv.style.display = 'none';
-            document.body.className = ''; // Reset background
+            document.body.className = ''; 
         });
 
-        // --- NEW FEATURE: Speech-to-Text (Microphone) ---
+        // --- Speech-to-Text (Microphone) ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             const recognition = new SpeechRecognition();
@@ -176,7 +233,7 @@
                 micBtn.classList.add('recording');
                 textInput.placeholder = 'Listening... Speak clearly into your mic.';
                 textInput.value = '';
-                document.body.className = ''; // Reset background
+                document.body.className = ''; 
                 window.speechSynthesis.cancel();
             };
 
@@ -199,7 +256,6 @@
                 recognition.start();
             });
         } else {
-            // Hide mic button if browser doesn't support it (e.g. Firefox sometimes)
             micBtn.style.display = 'none';
         }
 
@@ -223,7 +279,7 @@
             }
         }
 
-        // --- FEATURE: Text-to-Speech ---
+        // --- Text-to-Speech ---
         function speakVerdict(category, probability) {
             window.speechSynthesis.cancel();
             const speechText = `Verdict: ${category}. Confidence: ${probability} percent.`;
@@ -238,13 +294,11 @@
             const text = textInput.value;
             if (!text) return alert("Please type or speak an excuse first!");
 
-            // Reset UI
             document.body.className = ''; 
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = '<div class="loading">Analyzing the cringe level... ⏳</div>';
             analyzeBtn.disabled = true;
             
-            // Run AI
             const result = await classifier(text, categories);
             
             const topCategory = result.labels[0];
@@ -256,13 +310,13 @@
             if (topCategory.includes("technical issue")) { displayCategory = "Classic Tech Issue"; emoji = "🔌"; }
             else if (topCategory.includes("blatant lie")) { 
                 displayCategory = "Blatant Lie"; emoji = "🚨"; 
-                document.body.classList.add('lie-detected'); // Trigger Red Shake
+                document.body.classList.add('lie-detected');
             }
             else if (topCategory.includes("pure laziness")) { displayCategory = "Pure Laziness"; emoji = "🦥"; }
             else if (topCategory.includes("pet related")) { displayCategory = "Blamed the Pet"; emoji = "🐕"; }
             else { 
                 displayCategory = "Valid Excuse"; emoji = "✅"; 
-                document.body.classList.add('truth-detected'); // Trigger Green Glow
+                document.body.classList.add('truth-detected');
             }
 
             resultDiv.innerHTML = `
